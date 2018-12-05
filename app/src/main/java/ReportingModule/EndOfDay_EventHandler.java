@@ -246,7 +246,7 @@ public class EndOfDay_EventHandler {
                 //to be checked
                 total_sales += ((order)pair.getValue()).total_amount;
                 total_tax += TAX_PERCENT * ((order)pair.getValue()).total_amount;
-                total_profits += PROFIT_PERCENT * ((order)pair.getValue()).total_amount;
+                total_profits += PROFIT_PERCENT * (((order)pair.getValue()).total_amount - TAX_PERCENT * ((order)pair.getValue()).total_amount);
                 total_loss += ((order)pair.getValue()).loss;
                 it.remove();
             }
@@ -430,10 +430,10 @@ public class EndOfDay_EventHandler {
                 for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                     try
                     {
-                        //creating a mapping of id -> timestamp(to distinguish different reportts)
+                        //creating a mapping of id -> timestamp(to distinguish different reports)
                         String timeStamp = (String) userSnapshot.child("timestamp").getValue();
-                        Date ts = (new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SS")).parse(timeStamp);
-                        id_timestamp.put((int)userSnapshot.child("id").getValue(), ts);
+                        Date ts = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")).parse(timeStamp);
+                        id_timestamp.put(Integer.parseInt((String)userSnapshot.child("id").getValue()), ts);
                         time_stamp_order.put(ts,new order());
                     } catch (Exception e) {
 
@@ -456,12 +456,13 @@ public class EndOfDay_EventHandler {
         order_detail.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot order_detail : dataSnapshot.getChildren()) {
+                for (DataSnapshot order_detail : dataSnapshot.getChildren())
+                {
 
                     String dish_name = (String) order_detail.child("dishname").getValue();
-                    String order_id = (String) order_detail.child("orderid").getValue();
+                    int order_id =  Integer.parseInt((String)order_detail.child("orderid").getValue());
                     int servings =  ((Long)order_detail.child("servings").getValue()).intValue();
-                    String priority = (String) order_detail.child("priority").getValue();
+                    int priority = ((Long) order_detail.child("priority").getValue()).intValue();
 
 
                     //if this id exists in order also then
@@ -469,21 +470,29 @@ public class EndOfDay_EventHandler {
                     if (id_timestamp.get(order_id) != null)
                     {
 
-                        //check if this dish was wasted
-                        if (priority.equals(1))
+                        try
                         {
+                            //check if this dish was wasted
+                            if (priority == 1)
+                            {
 
-                            order o = time_stamp_order.get(id_timestamp.get(order_id));
-                            o.loss = o.loss + dish_prices.get(dish_name);
-                            time_stamp_order.put(id_timestamp.get(order_id), o);
+                                order o = time_stamp_order.get(id_timestamp.get(order_id));
+                                o.loss = o.loss + (int)(dish_prices.get(dish_name) - (dish_prices.get(dish_name)*PROFIT_PERCENT));
+                                time_stamp_order.put(id_timestamp.get(order_id), o);
+                            }
+                            else
+                                {
+
+                                order o = time_stamp_order.get(id_timestamp.get(order_id));
+                                o.total_amount = o.total_amount + (servings * dish_prices.get(dish_name));
+                                time_stamp_order.put(id_timestamp.get(order_id), o);
+                            }
                         }
-                        else
+                        catch (Exception e)
                         {
-
-                            order o = time_stamp_order.get(id_timestamp.get(order_id));
-                            o.total_amount = o.total_amount + (servings * dish_prices.get(dish_name));
-                            time_stamp_order.put(id_timestamp.get(order_id), o);
+                            System.out.print(e);
                         }
+
                     }
                 }
             }
@@ -501,17 +510,7 @@ public class EndOfDay_EventHandler {
             public void onDataChange(DataSnapshot dataSnapshot)
             {
                 end_of_week[0] = (String)dataSnapshot.getValue();
-            }
-            @Override
-            public void onCancelled (DatabaseError databaseError){
-                System.out.println("The read failed: " + databaseError.getCode());
-            }
-
-        });
-
-
-
-                /*Here we are checking which report to send
+                 /*Here we are checking which report to send
                 * for example weekly, monhtly, */
                 Date current_date = new Date();
                 Calendar calendar = Calendar.getInstance();
@@ -534,6 +533,18 @@ public class EndOfDay_EventHandler {
                 {
                     DailyReport(time_stamp_order);
                 }
+
+
+            }
+            @Override
+            public void onCancelled (DatabaseError databaseError){
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+
+        });
+
+
+
 
 
     }
