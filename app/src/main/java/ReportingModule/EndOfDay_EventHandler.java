@@ -157,7 +157,11 @@ public class EndOfDay_EventHandler {
                 }
                 //daily report
             else
-                {   Font f = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.GRAYWHITE);
+                {
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                    Date date1 = new Date();
+                    System.out.println(formatter.format(date1));
+                    Font f = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.GRAYWHITE);
                     f.setColor(BaseColor.WHITE);
                     PdfPCell cell = new PdfPCell(new Phrase("Daily Sales Report", f));
                     cell.setBackgroundColor(BaseColor.BLACK);
@@ -166,7 +170,7 @@ public class EndOfDay_EventHandler {
                     cell.setColspan(2);
                     cell.setFixedHeight(50);
                     table.addCell(cell);
-                    cell.setPhrase(new Phrase(getDayOfWeek(week)+String.valueOf(Calendar.DATE) ,fp));
+                    cell.setPhrase(new Phrase(formatter.format(date1) ,fp));
                     cell.setBackgroundColor(BaseColor.BLACK);
                     cell.setFixedHeight(25);
 
@@ -628,7 +632,7 @@ public class EndOfDay_EventHandler {
                 } else if (awain||current_date.getDay() == last_day_ofmonth)
                 {
                     MonthlyReport(time_stamp_order);
-                } else if (dayOfWeek == 5)
+                } else if (awain&&dayOfWeek == 5)
                 {
                     WeeklyReport(time_stamp_order);
                 }
