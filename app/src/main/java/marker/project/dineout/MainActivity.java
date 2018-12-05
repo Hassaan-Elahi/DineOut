@@ -7,25 +7,13 @@ import android.view.View;
 import android.widget.Button;
 
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-
-import EmailSender.GMailSender;
 import ReportingModule.EndOfDay_EventHandler;
 
 
 public class MainActivity extends AppCompatActivity
 {
 
-    Context context = this;
+    public Context context = this;
 
     /*
     public void Send_Mail()
@@ -68,7 +56,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
-                EndOfDay_EventHandler handler = new EndOfDay_EventHandler();
+                EndOfDay_EventHandler handler = new EndOfDay_EventHandler(context);
                 handler.HandleCloseDayEvent();
                 //print email sent
 
