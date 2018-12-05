@@ -2,6 +2,11 @@ package ReportingModule;
 
 import android.arch.lifecycle.ReportFragment;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -12,17 +17,25 @@ import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
+import com.itextpdf.text.ExceptionConverter;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.GrayColor;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,9 +44,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import marker.project.dineout.R;
+
 
 public class EndOfDay_EventHandler {
     private Context context;
+    private String email="arshad.shafaq15@gmail.com";
 
     public EndOfDay_EventHandler(Context c) {
         this.context = c;
@@ -42,190 +58,277 @@ public class EndOfDay_EventHandler {
     final double TAX_PERCENT = 0.1;
     final double PROFIT_PERCENT = 0.1;
 
-    public void createPDF(int type, int total_sales, int total_tax, int total_loss, int total_profit)
-    {
-        Date today = new Date();
-        File report_file = new File(context.getFilesDir(), "Report.pdf");
+
+    public void createPDF(int type, int total_sales, int total_tax, int total_loss, int total_profit)  {
+
+        String[] columnHeaders= new String[]{"Total Sales ",String.valueOf(total_sales),"Taxes ",String.valueOf(total_tax)," Losses "
+                ,String.valueOf(total_loss)," Profit",String.valueOf(total_profit)};
+        Date date=new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        int week= cal.get(Calendar.DAY_OF_WEEK);
+
+        File file = new File(context.getFilesDir(),"Report.pdf");
         Document document = new Document();
-        try
-        {
-            PdfWriter.getInstance(document, new FileOutputStream(report_file, false));
+        PdfWriter pdf = null;
+        try {
+             pdf= PdfWriter.getInstance(document, new FileOutputStream(file,false));
             document.open();
-            Paragraph p = new Paragraph();
+            addHeader(pdf,document);
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
-            //yearly report
-            if(type == 1)
-            {
-                p.add("Yearly Report for Year "+today.getYear());
+        PdfPTable table = new PdfPTable(2);
+        table.setSplitLate(false);
+        try {
+            table.setWidths(new int[]{60,60});
 
-            }
-            //monthly report
-            else if (type == 2)
-            {
-                p.add("Monthly Report for Month "+today.getMonth());
-            }
-            //weekly report
-            else if(type == 3)
-            {
-                p.add("Weekly Report");
-            }
-            //daily report
-            else
-            {
-                p.add("Daily Report for Date "+today.getDate());
-            }
-            p.add("\n");
-            p.add("Total Sales:    "+ total_sales);
-            p.add("Total Profit:   "+ total_profit);
-            p.add("Total Tax paid: "+total_tax);
-            p.add("Total Loss:     "+total_loss);
-
-            document.add(p);
-
-
-
-            /*
-            PdfPTable table = new PdfPTable(2);
-            table.setWidthPercentage(100f);
-            PdfPCell cell = new PdfPCell(new Phrase("Sales Report"));
-            table.addCell(cell);
-            table.setSplitLate(false);
-            //second colunm is 3 times 1st column
-            table.setWidths(new float[] { 1, 3 });
             table.getDefaultCell().setBackgroundColor(BaseColor.CYAN);
             table.setWidthPercentage(100f);
             table.getDefaultCell().setUseAscender(true);
             table.getDefaultCell().setUseDescender(true);
-        */
+            Paragraph title = new Paragraph();
+            title.setAlignment(Element.ALIGN_CENTER);
+            Font fp = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.RED);
+            fp.setColor(BaseColor.WHITE);
+            //yearly report
+            if(type == 1)
+            {
+                // Add the first header row. It says Sales Report
+                Font f = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.GRAYWHITE);
+                f.setColor(BaseColor.WHITE);
+                PdfPCell cell = new PdfPCell(new Phrase("Yearly Sales Report", f));
+                cell.setBackgroundColor(BaseColor.BLACK);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setColspan(2);
+                cell.setFixedHeight(50);
+                table.addCell(cell);
+                cell.setPhrase(new Phrase("Year: "+String.valueOf(year) ,fp));
+                cell.setBackgroundColor(BaseColor.BLACK);
+                cell.setFixedHeight(25);
+                cell.setVerticalAlignment(Element.ALIGN_TOP);
+                table.addCell(cell);
 
+            }
+                //monthly report
+            else if (type == 2)
+                {
+                    Font f = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.GRAYWHITE);
+                    f.setColor(BaseColor.WHITE);
+                    PdfPCell cell = new PdfPCell(new Phrase("Monthly Sales Report", f));
+                    cell.setBackgroundColor(BaseColor.BLACK);
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setColspan(2);
+                    cell.setFixedHeight(50);
+                    table.addCell(cell);
+                    cell.setPhrase(new Phrase("Month: "+getMonth(month) ,fp));
+                    cell.setBackgroundColor(BaseColor.BLACK);
+                    cell.setFixedHeight(25);
+
+                    cell.setVerticalAlignment(Element.ALIGN_TOP);
+                    table.addCell(cell);
+                }
+                //weekly report
+            else if(type == 3)
+                {
+                    Font f = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.GRAYWHITE);
+                    f.setColor(BaseColor.WHITE);
+                    PdfPCell cell = new PdfPCell(new Phrase("Weekly Sales Report", f));
+                    cell.setBackgroundColor(BaseColor.BLACK);
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setColspan(2);
+                    cell.setFixedHeight(50);
+                    table.addCell(cell);
+                    cell.setPhrase(new Phrase("Week: "+String.valueOf(week) ,fp));
+                    cell.setBackgroundColor(BaseColor.BLACK);
+                    cell.setFixedHeight(25);
+
+                    cell.setVerticalAlignment(Element.ALIGN_TOP);
+                    table.addCell(cell);
+                }
+                //daily report
+            else
+                {   Font f = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.GRAYWHITE);
+                    f.setColor(BaseColor.WHITE);
+                    PdfPCell cell = new PdfPCell(new Phrase("Daily Sales Report", f));
+                    cell.setBackgroundColor(BaseColor.BLACK);
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setColspan(2);
+                    cell.setFixedHeight(50);
+                    table.addCell(cell);
+                    cell.setPhrase(new Phrase(getDayOfWeek(week)+String.valueOf(Calendar.DATE) ,fp));
+                    cell.setBackgroundColor(BaseColor.BLACK);
+                    cell.setFixedHeight(25);
+
+                    cell.setVerticalAlignment(Element.ALIGN_TOP);
+                    table.addCell(cell);
+
+                }
+            PdfPCell cell;
+            //second row has header for columns like dish name prce
+            for (int i = 0; i < 8; i++) {
+                if(i%2==0) {
+                    Font f = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD, GrayColor.GRAYWHITE);
+                    f.setColor(BaseColor.BLACK);
+
+                    cell = new PdfPCell(new Phrase(columnHeaders[i], f));
+                    cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+                    cell.setFixedHeight(25);
+                    table.addCell(cell);
+                }
+                else{
+                    table.getDefaultCell().setBackgroundColor(BaseColor.PINK);
+                    Font f = new Font(Font.FontFamily.HELVETICA, 11, Font.NORMAL, GrayColor.GRAYWHITE);
+                    f.setColor(BaseColor.BLACK);
+                    cell = new PdfPCell(new Phrase(columnHeaders[i].toString(), f));
+                    cell.setBackgroundColor(new BaseColor(255,240,245));
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+                    cell.setFixedHeight(25);
+                    table.addCell(cell);
+                }
+            }
+            //table.writeSelectedRows(0,-1,34,806,pdf.getDirectContent());
+            document.add(table);
             document.close();
-        } catch (Exception e) {
-            System.out.print(e.getStackTrace());
-            System.out.print(e.getMessage());
+
+        } catch (DocumentException e) {
+            System.out.println("hsjsjs");
+            e.printStackTrace();
         }
+
+
+
+
+
+
+
+
+
+
+
 
 
     }
 
+
+    private String getDayOfWeek(int value) {
+        String day = "";
+        switch (value) {
+            case 1:
+                day = "Sunday";
+                break;
+            case 2:
+                day = "Monday";
+                break;
+            case 3:
+                day = "Tuesday";
+                break;
+            case 4:
+                day = "Wednesday";
+                break;
+            case 5:
+                day = "Thursday";
+                break;
+            case 6:
+                day = "Friday";
+                break;
+            case 7:
+                day = "Saturday";
+                break;
+        }
+        return day;
+    }
+    private void addHeader(PdfWriter writer, Document document){
+        PdfPTable header = new PdfPTable(2);
+        System.out.println("ok1 here");
+
+        try {
+            // set defaults
+            header.setWidths(new int[]{2, 24});
+            header.setTotalWidth(527);
+            header.setLockedWidth(true);
+            header.getDefaultCell().setFixedHeight(40);
+            header.getDefaultCell().setBorder(Rectangle.BOTTOM);
+            header.getDefaultCell().setBorderColor(BaseColor.LIGHT_GRAY);
+            Drawable d = context.getDrawable(R.drawable.logo);
+            BitmapDrawable bitDw = ((BitmapDrawable) d);
+            Bitmap bmp = bitDw.getBitmap();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            Image image = Image.getInstance(stream.toByteArray());
+            // add image]
+            header.addCell(image);
+            // add text
+            PdfPCell text = new PdfPCell();
+            text.setPaddingBottom(15);
+            text.setPaddingLeft(10);
+            text.setBorder(Rectangle.BOTTOM);
+            text.setBorderColor(BaseColor.LIGHT_GRAY);
+            text.addElement(new Phrase("DineOut-The Restaurant Of Tommorrrow", new Font(Font.FontFamily.HELVETICA, 12)));
+            text.addElement(new Phrase("https://dineout.com", new Font(Font.FontFamily.HELVETICA, 8)));
+            header.addCell(text);
+            document.add(header);
+            // write content
+            //   header.writeSelectedRows(0, -1, 34, 803, writer.getDirectContent());
+
+            System.out.println("ok here");
+
+
+        } catch(DocumentException de) {
+            System.out.println("not here");
+
+            throw new ExceptionConverter(de);
+        } catch (MalformedURLException e) {
+            System.out.println("sjjds here");
+
+            throw new ExceptionConverter(e);
+        } catch (IOException e) {
+            System.out.println("oksnsnere");
+
+            throw new ExceptionConverter(e);
+        }
+    }
+
+    private String getMonth(int month) {
+        String[] months = new DateFormatSymbols().getMonths();
+        return months[month-1];
+    }
 
 
     public void SendMail(int type, int total_sales, int total_tax, int total_loss,int total_profit)
+{
+
+
+    createPDF(1,78,10,20,25);
+    GMailSender sender = new GMailSender("dineoutx@gmail.com", "ShafaqAirlines78");
+    try
     {
-
-
-        createPDF(1,78,10,20,25);
-        GMailSender sender = new GMailSender("dineoutx@gmail.com", "ShafaqAirlines78");
-        try
-        {
-            sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", "hassaan.elahi15@gmail.com");
-        }
-        catch (Exception e)
-        {
-            System.out.print(e.getMessage());
-        }
-
-
+        sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
+        sender.sendMail("Sales Report", "", "dineoutx@gmail.com", "shafaq.arshad15@gmail.com");
+    }
+    catch (Exception e)
+    {
+        System.out.print(e.getMessage());
     }
 
 
+}
 
-
-
-//    public void createPdf(Context c, String dest) throws IOException, DocumentException {
-//
-//        File file1 = new File(c.getFilesDir(),"files");
-//        if(!file1.exists())
-//        {
-//            file1.mkdir();
-//        }
-//        else
-//        {
-//            System.out.println("File already exists");
-//        }
-//
-//        File file = new File(file1, DEST);
-//        //System.out.println(file.getPath());
-//        Document document = new Document();
-//        PdfWriter.getInstance(document, new FileOutputStream(file,false));
-//        document.open();
-//        PdfPTable table = new PdfPTable(numberOfColumns);
-//        table.setSplitLate(false);
-//        table.setWidths(columnWidths);
-//        table.getDefaultCell().setBackgroundColor(BaseColor.CYAN);
-//        table.setWidthPercentage(100f);
-//        table.getDefaultCell().setUseAscender(true);
-//        table.getDefaultCell().setUseDescender(true);
-//
-//        // Add the first header row. It says Sales Report
-//        Font f = new Font(Font.FontFamily.HELVETICA, 17, Font.NORMAL, GrayColor.GRAYWHITE);
-//        f.setColor(BaseColor.WHITE);
-//        PdfPCell cell = new PdfPCell(new Phrase(TypeOfReport, f));
-//        cell.setBackgroundColor(BaseColor.BLACK);
-//        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-//        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-//        cell.setColspan(numberOfColumns);
-//        cell.setFixedHeight(50);
-//        table.addCell(cell);
-//        //second row has header for columns like dish name prce
-//        for (int i = 0; i < numberOfColumns; i++) {
-//            cell = new PdfPCell(new Phrase(columnHeaders[i], f));
-//
-//            cell.setBackgroundColor(BaseColor.GRAY);
-//            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-//            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-//            table.addCell(cell);
-//        }
-//        table.getDefaultCell().setBackgroundColor(BaseColor.PINK);
-//        table.setHeaderRows(2);
-//        f = new Font(Font.FontFamily.HELVETICA, 11, Font.NORMAL, GrayColor.GRAYWHITE);
-//        f.setColor(BaseColor.BLACK);
-//        //Our Row data goes here
-//        for (TableRow rows:trows) {
-//            for (int i=0;i<numberOfColumns;i++) {
-//                cell = new PdfPCell(new Phrase(rows.cells[i].toString(), f));
-//                cell.setBackgroundColor(BaseColor.PINK);
-//                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-//                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-//                table.addCell(cell);
-//            }
-//        }
-//        //                new int[]{60, 30,30,30};
-//        int[] innerwidths=new int[Totals.length+1];
-//        innerwidths[0]=0;
-//        for(int i=0;i<columnWidths.length-Totals.length;i++){
-//            innerwidths[0]+=columnWidths[i];
-//        }
-//        for(int i=1;i<=Totals.length;i++){
-//            innerwidths[i]= columnWidths[columnWidths.length-Totals.length+i-1];
-//        }
-//        PdfPTable innertable = new PdfPTable(Totals.length+1);
-//        innertable.setWidths(innerwidths);
-//        innertable.setWidthPercentage(100f);
-//        cell = new PdfPCell(new Phrase("Total", f));
-//        cell.setBackgroundColor(BaseColor.PINK);
-//
-//        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-//        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-//        innertable.addCell(cell);
-//        f = new Font(Font.FontFamily.HELVETICA, 11, Font.NORMAL, GrayColor.GRAYWHITE);
-//        f.setColor(BaseColor.BLACK);
-//        for (int i = 0; i <Totals.length; i++) {
-//
-//            cell.setPhrase(new Phrase(Integer.toString(Totals[i])));
-//            cell.setBackgroundColor(BaseColor.CYAN);
-//            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-//            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-//            innertable.addCell(cell);
-//
-//        }
-//        document.add(table);
-//        document.add(innertable);
-//        document.close();*/
-//    }
-//
-//
-//
 
     public void YearlyReport(Map<Date,order> time_stamp_order)
     {
@@ -257,7 +360,7 @@ public class EndOfDay_EventHandler {
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", "hassaan.elahi15@gmail.com");
+            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
@@ -295,7 +398,7 @@ public class EndOfDay_EventHandler {
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", "hassaan.elahi15@gmail.com");
+            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
@@ -337,7 +440,7 @@ public class EndOfDay_EventHandler {
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", "hassaan.elahi15@gmail.com");
+            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
@@ -379,7 +482,7 @@ public class EndOfDay_EventHandler {
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", "hassaan.elahi15@gmail.com");
+            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
@@ -481,7 +584,7 @@ public class EndOfDay_EventHandler {
                                 time_stamp_order.put(id_timestamp.get(order_id), o);
                             }
                             else
-                                {
+                            {
 
                                 order o = time_stamp_order.get(id_timestamp.get(order_id));
                                 o.total_amount = o.total_amount + (servings * dish_prices.get(dish_name));
@@ -518,11 +621,11 @@ public class EndOfDay_EventHandler {
                 int last_day_ofmonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
                 int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
-
-                if (current_date.getDay() == last_day_ofmonth && current_date.getMonth() == 12)
+                boolean awain=false;
+                if ((current_date.getDay() == last_day_ofmonth && current_date.getMonth() == 12))
                 {
                     YearlyReport(time_stamp_order);
-                } else if (current_date.getDay() == last_day_ofmonth)
+                } else if (awain||current_date.getDay() == last_day_ofmonth)
                 {
                     MonthlyReport(time_stamp_order);
                 } else if (dayOfWeek == 5)
@@ -548,8 +651,6 @@ public class EndOfDay_EventHandler {
 
 
     }
-
-
 
 }
 
