@@ -59,7 +59,8 @@ public class EndOfDay_EventHandler {
     final double PROFIT_PERCENT = 0.1;
 
 
-    public void createPDF(int type, int total_sales, int total_tax, int total_loss, int total_profit)  {
+    public void createPDF(int type, int total_sales, int total_tax, int total_loss, int total_profit)
+    {
 
         String[] columnHeaders= new String[]{"Total Sales ",String.valueOf(total_sales),"Taxes ",String.valueOf(total_tax)," Losses "
                 ,String.valueOf(total_loss)," Profit",String.valueOf(total_profit)};
