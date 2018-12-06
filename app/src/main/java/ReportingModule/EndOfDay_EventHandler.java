@@ -47,16 +47,92 @@ import java.util.Map;
 import marker.project.dineout.R;
 
 
-public class EndOfDay_EventHandler {
-    private Context context;
-    private String email="arshad.shafaq15@gmail.com";
 
-    public EndOfDay_EventHandler(Context c) {
+
+
+
+
+
+
+public class EndOfDay_EventHandler
+{
+
+    private Context context;
+    private String email="hassaan.elahi15@gmail.com";
+
+    private String GetHTML(int total_sales, int total_tax, int total_loss, int total_profit)
+    {
+        String html = "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head>\n" +
+                "<style>\n" +
+                "table {\n" +
+                "    font-family: arial, sans-serif;\n" +
+                "    border-collapse: collapse;\n" +
+                "    width: 100%;\n" +
+                "}\n" +
+                "\n" +
+                "td, th {\n" +
+                "    border: 1px solid #dddddd;\n" +
+                "    text-align: left;\n" +
+                "    padding: 8px;\n" +
+                "}\n" +
+                "\n" +
+                "tr:nth-child(even) {\n" +
+                "    background-color: #dddddd;\n" +
+                "}\n" +
+                "</style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "\n" +
+                "<h3><strong>Sales Report</strong></h3>\n" +
+                "\n" +
+                "<table>\n" +
+                "  <tr style=\"color:black\">\n" +
+                "    <th >Report</th>\n" +
+                "    <th>Values</th>\n" +
+                "  </tr>\n" +
+                "  <tr>\n" +
+                "    <b><td>Total Sales</td></b>\n" +
+                "    <td>"+total_sales+"</td>\n" +
+                "  </tr>\n" +
+                "  <tr>\n" +
+                "    <td>Total Profit</td>\n" +
+                "    <td>"+total_profit+"</td>\n" +
+                "  </tr>\n" +
+                "  <tr>\n" +
+                "    <td>Total Tax paid</td>\n" +
+                "    <td>"+total_tax+"</td>\n" +
+                "  </tr>\n" +
+                "  <tr>\n" +
+                "    <td>Total Loss</td>\n" +
+                "    <td>"+total_loss+"</td>\n" +
+                "\n" +
+                "  </tr>\n" +
+                "  </tr>\n" +
+                "  <tr>\n" +
+                "    <td>Total Expenditure</td>\n" +
+                "    <td>"+(total_sales-(total_profit+total_tax))+"</td>\n" +
+                "\n" +
+                "  </tr>\n" +
+                "  \n" +
+                "  \n" +
+                "</table>\n" +
+                "\n" +
+                "</body>\n" +
+                "</html>\n";
+        return html;
+    }
+
+
+    public EndOfDay_EventHandler(Context c)
+
+    {
         this.context = c;
     }
 
-    final double TAX_PERCENT = 0.1;
-    final double PROFIT_PERCENT = 0.1;
+    final double TAX_PERCENT = 0.15;
+    final double PROFIT_PERCENT = 0.45;
 
 
     public void createPDF(int type, int total_sales, int total_tax, int total_loss, int total_profit)
@@ -220,14 +296,6 @@ public class EndOfDay_EventHandler {
 
 
 
-
-
-
-
-
-
-
-
     }
 
 
@@ -324,7 +392,7 @@ public class EndOfDay_EventHandler {
     try
     {
         sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-        sender.sendMail("Sales Report", "", "dineoutx@gmail.com", "shafaq.arshad15@gmail.com");
+        sender.sendMail("Sales Report", "This is an automatic mail",GetHTML(total_sales,total_tax,total_loss,2415) ,"dineoutx@gmail.com", "shafaq.arshad15@gmail.com");
     }
     catch (Exception e)
     {
@@ -354,7 +422,7 @@ public class EndOfDay_EventHandler {
                 //to be checked
                 total_sales += ((order)pair.getValue()).total_amount;
                 total_tax += TAX_PERCENT * ((order)pair.getValue()).total_amount;
-                total_profits += PROFIT_PERCENT * (((order)pair.getValue()).total_amount - TAX_PERCENT * ((order)pair.getValue()).total_amount);
+                total_profits += PROFIT_PERCENT * (((order)pair.getValue()).total_amount - (TAX_PERCENT * ((order)pair.getValue()).total_amount));
                 total_loss += ((order)pair.getValue()).loss;
                 it.remove();
             }
@@ -365,7 +433,7 @@ public class EndOfDay_EventHandler {
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
+            sender.sendMail("Sales Report", "This is an automatic Email",GetHTML(total_sales,total_tax,total_loss,total_profits), "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
@@ -393,17 +461,17 @@ public class EndOfDay_EventHandler {
                 //to be checked
                 total_sales += ((order)pair.getValue()).total_amount;
                 total_tax += TAX_PERCENT * ((order)pair.getValue()).total_amount;
-                total_profits += PROFIT_PERCENT * ((order)pair.getValue()).total_amount;
+                total_profits += PROFIT_PERCENT * (((order)pair.getValue()).total_amount - (TAX_PERCENT * ((order)pair.getValue()).total_amount));
                 total_loss += ((order)pair.getValue()).loss;
                 it.remove();
             }
         }
-        createPDF(2,total_sales,total_tax,total_loss,total_profits);
+        createPDF(1,total_sales,total_tax,total_loss,total_profits);
         GMailSender sender = new GMailSender("dineoutx@gmail.com", "ShafaqAirlines78");
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
+            sender.sendMail("Sales Report", "This is an automatic Email",GetHTML(total_sales,total_tax,total_loss,total_profits), "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
@@ -434,7 +502,7 @@ public class EndOfDay_EventHandler {
                 //to be checked
                 total_sales += ((order)pair.getValue()).total_amount;
                 total_tax += TAX_PERCENT * ((order)pair.getValue()).total_amount;
-                total_profits += PROFIT_PERCENT * ((order)pair.getValue()).total_amount;
+                total_profits += PROFIT_PERCENT * (((order)pair.getValue()).total_amount - (TAX_PERCENT * ((order)pair.getValue()).total_amount));
                 total_loss += ((order)pair.getValue()).loss;
                 it.remove();
             }
@@ -445,7 +513,7 @@ public class EndOfDay_EventHandler {
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
+            sender.sendMail("Sales Report", "This is an automatic Email",GetHTML(total_sales,total_tax,total_loss,total_profits), "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
@@ -476,7 +544,7 @@ public class EndOfDay_EventHandler {
                 //to be checked
                 total_sales += ((order)pair.getValue()).total_amount;
                 total_tax += TAX_PERCENT * ((order)pair.getValue()).total_amount;
-                total_profits += PROFIT_PERCENT * ((order)pair.getValue()).total_amount;
+                total_profits += PROFIT_PERCENT * (((order)pair.getValue()).total_amount - (TAX_PERCENT * ((order)pair.getValue()).total_amount));
                 total_loss += ((order)pair.getValue()).loss;
                 it.remove();
             }
@@ -487,13 +555,13 @@ public class EndOfDay_EventHandler {
         try
         {
             sender.addAttachment(context.getFilesDir() + "/" + "Report.pdf");
-            sender.sendMail("Sales Report", "", "dineoutx@gmail.com", email);
+            sender.sendMail("Sales Report", "This is an automatic Email",GetHTML(total_sales,total_tax,total_loss,total_profits), "dineoutx@gmail.com", email);
         }
         catch (Exception e)
         {
             System.out.print(e.getMessage());
         }
-        //Send these stats here
+
 
     }
 
@@ -533,9 +601,11 @@ public class EndOfDay_EventHandler {
         Query order_query = ref.child("Order");
         order_query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(DataSnapshot dataSnapshot)
+            {
 
-                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                for (DataSnapshot userSnapshot : dataSnapshot.getChildren())
+                {
                     try
                     {
                         //creating a mapping of id -> timestamp(to distinguish different reports)
@@ -550,97 +620,123 @@ public class EndOfDay_EventHandler {
 
                     }
                 }
-            }
-            @Override
-            public void onCancelled (DatabaseError databaseError){
-                System.out.println("The read failed: " + databaseError.getCode());
-            }
-
-        });
 
 
-        //here we will check for dishes
-        Query order_detail = ref.child("OrderDetails");
-        order_detail.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot order_detail : dataSnapshot.getChildren())
-                {
 
-                    String dish_name = (String) order_detail.child("dishname").getValue();
-                    int order_id =  Integer.parseInt((String)order_detail.child("orderid").getValue());
-                    int servings =  ((Long)order_detail.child("servings").getValue()).intValue();
-                    int priority = ((Long) order_detail.child("priority").getValue()).intValue();
-
-
-                    //if this id exists in order also then
-                    //it means this dish is part of collected order
-                    if (id_timestamp.get(order_id) != null)
-                    {
-
-                        try
+                //here we will check for dishes
+                Query order_detail = ref.child("OrderDetails");
+                order_detail.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot order_detail : dataSnapshot.getChildren())
                         {
-                            //check if this dish was wasted
-                            if (priority == 1)
+
+                            String dish_name = (String) order_detail.child("dishname").getValue();
+                            int order_id =  Integer.parseInt((String)order_detail.child("orderid").getValue());
+                            int servings =  ((Long)order_detail.child("servings").getValue()).intValue();
+                            int priority = ((Long) order_detail.child("priority").getValue()).intValue();
+
+
+                            //if this id exists in order also then
+                            //it means this dish is part of collected order
+                            if (id_timestamp.get(order_id) != null)
                             {
 
-                                order o = time_stamp_order.get(id_timestamp.get(order_id));
-                                o.loss = o.loss + (int)(dish_prices.get(dish_name) - (dish_prices.get(dish_name)*PROFIT_PERCENT));
-                                time_stamp_order.put(id_timestamp.get(order_id), o);
-                            }
-                            else
-                            {
+                                try
+                                {
+                                    //check if this dish was wasted
+                                    if (priority == 1)
+                                    {
 
-                                order o = time_stamp_order.get(id_timestamp.get(order_id));
-                                o.total_amount = o.total_amount + (servings * dish_prices.get(dish_name));
-                                time_stamp_order.put(id_timestamp.get(order_id), o);
+                                        order o = time_stamp_order.get(id_timestamp.get(order_id));
+                                        o.loss = o.loss + (int)(dish_prices.get(dish_name) - (dish_prices.get(dish_name)*PROFIT_PERCENT));
+                                        time_stamp_order.put(id_timestamp.get(order_id), o);
+                                    }
+                                    else
+                                    {
+
+                                        order o = time_stamp_order.get(id_timestamp.get(order_id));
+                                        o.total_amount = o.total_amount + (servings * dish_prices.get(dish_name));
+                                        time_stamp_order.put(id_timestamp.get(order_id), o);
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    System.out.print(e);
+                                }
+
                             }
                         }
-                        catch (Exception e)
+
+
+
+
+                        Query end_week_query = ref.child("EndOfWeek");
+                        end_week_query.addListenerForSingleValueEvent(new ValueEventListener()
                         {
-                            System.out.print(e);
-                        }
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot)
+                            {
+                                end_of_week[0] = (String)dataSnapshot.getValue();
+                                 /*Here we are checking which report to send
+                                * for example weekly, monhtly, */
+                                Date current_date = new Date();
+                                Calendar calendar = Calendar.getInstance();
+
+                                int last_day_ofmonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+                                int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+
+                                boolean awain=false;
+                                if ((current_date.getDay() == last_day_ofmonth && current_date.getMonth() == 12))
+                                {
+                                    YearlyReport(time_stamp_order);
+                                } else if (awain||current_date.getDay() == last_day_ofmonth)
+                                {
+                                    MonthlyReport(time_stamp_order);
+                                } else if (awain&&dayOfWeek == 5)
+                                {
+                                    WeeklyReport(time_stamp_order);
+                                }
+                                else
+                                {
+                                    DailyReport(time_stamp_order);
+                                }
+
+
+                            }
+                            @Override
+                            public void onCancelled (DatabaseError databaseError){
+                                System.out.println("The read failed: " + databaseError.getCode());
+                            }
+
+                        });
+
+
+
+
+
+
+
+
+
+
 
                     }
-                }
-            }
-            @Override
-            public void onCancelled (DatabaseError databaseError){
-                System.out.println("The read failed: " + databaseError.getCode());
-            }
+                    @Override
+                    public void onCancelled (DatabaseError databaseError){
+                        System.out.println("The read failed: " + databaseError.getCode());
+                    }
 
-        });
+                });
 
 
-        Query end_week_query = ref.child("EndOfWeek");
-        end_week_query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot)
-            {
-                end_of_week[0] = (String)dataSnapshot.getValue();
-                 /*Here we are checking which report to send
-                * for example weekly, monhtly, */
-                Date current_date = new Date();
-                Calendar calendar = Calendar.getInstance();
 
-                int last_day_ofmonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-                int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
-                boolean awain=false;
-                if ((current_date.getDay() == last_day_ofmonth && current_date.getMonth() == 12))
-                {
-                    YearlyReport(time_stamp_order);
-                } else if (awain||current_date.getDay() == last_day_ofmonth)
-                {
-                    MonthlyReport(time_stamp_order);
-                } else if (awain&&dayOfWeek == 5)
-                {
-                    WeeklyReport(time_stamp_order);
-                }
-                else
-                {
-                    DailyReport(time_stamp_order);
-                }
+
+
+
+
+
 
 
             }
@@ -650,6 +746,9 @@ public class EndOfDay_EventHandler {
             }
 
         });
+
+
+
 
 
 

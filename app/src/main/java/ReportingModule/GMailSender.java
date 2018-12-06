@@ -62,7 +62,7 @@ public class GMailSender extends javax.mail.Authenticator
 
 
 
-    public synchronized void sendMail(final String _subject, final String _body,final String _sender,final String _recipients) throws Exception
+    public synchronized void sendMail(final String _subject, final String _body,final String html,final String _sender,final String _recipients) throws Exception
     {
         new Thread(new Runnable() 
         {
@@ -88,12 +88,20 @@ public class GMailSender extends javax.mail.Authenticator
                 message.setSender(new InternetAddress(sender));
                 message.setSubject(subject);
                 message.setDataHandler(handler);
+
+                //making a new body part text
                 BodyPart messageBodyPart = new MimeBodyPart();
                 messageBodyPart.setText(body);
                 _multipart.addBodyPart(messageBodyPart);
 
-                // Put parts in message
+                //making html body par
+                BodyPart html_bodypart = new MimeBodyPart();
+                html_bodypart.setContent(html,"text/html");
+                _multipart.addBodyPart(html_bodypart);
+
+                //setting multipart as a content in the messege
                 message.setContent(_multipart);
+
 
                 if (recipients.indexOf(',') > 0)
                 {
